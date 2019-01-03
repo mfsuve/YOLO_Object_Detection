@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 
 model = Darknet('../yolov3.cfg')
 model.load_weights('../yolov3.weights')
-model.eval()
 
 cap = cv2.VideoCapture('../video.mp4')
 
@@ -29,12 +28,13 @@ while cap.isOpened():
 	frame = frame.transpose((2, 0, 1))
 	tensor = torch.Tensor(frame)
 	tensor = tensor.unsqueeze(0)
-	output = model(tensor, CUDA=False).numpy()
+	with torch.no_grad():
+		output = model(tensor, CUDA=False).numpy()
 	
 	# print(output.size())
 	# input(output)
 	for i in range(output.shape[1]):
-		if output[0, i, 4] > 0.6:
+		if output[0, i, 4] > 0.2:
 			coords = output[0, i, :4]
 			draw_square(real_frame, *[int(x) for x in coords])
 	

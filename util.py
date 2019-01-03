@@ -159,7 +159,7 @@ def write_results(prediction, confidence, num_classes, nms_conf=0.4):
 				except IndexError:
 					break
 				
-				# Zero out all the detections that have IoU > treshhold
+				# Zero out all the detections that have IoU > thresholds
 				iou_mask = (ious < nms_conf).float().unsqueeze(1)
 				image_pred_class[i + 1:] *= iou_mask
 				
