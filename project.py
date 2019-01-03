@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 
 model = Darknet('../yolov3.cfg')
 model.load_weights('../yolov3.weights')
+model.eval()
 
 cap = cv2.VideoCapture('../video.mp4')
 
@@ -33,7 +34,7 @@ while cap.isOpened():
 	# print(output.size())
 	# input(output)
 	for i in range(output.shape[1]):
-		if output[0, i, 4] > 0.3:
+		if output[0, i, 4] > 0.6:
 			coords = output[0, i, :4]
 			draw_square(real_frame, *[int(x) for x in coords])
 	
