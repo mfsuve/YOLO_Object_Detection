@@ -2,45 +2,47 @@ from darknet import Darknet
 import cv2
 import torch
 import numpy as np
-import matplotlib.pyplot as plt
+import os
+from util import write_results
+
+CUDA = False
 
 model = Darknet('../yolov3.cfg')
+if CUDA:
+	model = model.cuda()
 model.load_weights('../yolov3.weights')
 
-cap = cv2.VideoCapture('../video.mp4')
+frames_path = '../Istanbul_traffic_annotated/Istanbul_traffic_annotated/images'
 
-
-def draw_square(img, x, y, w, h):
-	w, h = int(w), int(h)
-	cv2.rectangle(img, (x - w // 2, y - h // 2), (x + w // 2, y + h // 2), (255, 0, 0), thickness=2)
-
-
-while cap.isOpened():
-	ret, frame = cap.read()
-	
-	h, w, _ = frame.shape
-	diff = w - h
-	pad = diff // 2
-	frame = frame[:, pad:w - pad, :]
-	frame = cv2.resize(frame, (608, 608))
+for file in os.listdir(frames_path):
+	file_path = os.path.join(frames_path, file)
+	frame = cv2.imread(file_path)
 	real_frame = frame.copy()
+	h, w, _ = frame.shape
+	# Making it square by padding
+	frame = cv2.copyMakeBorder(frame, 0, max(0, w - h), 0, max(0, h - w), cv2.BORDER_CONSTANT, value=0)
 	
 	frame = frame.transpose((2, 0, 1))
 	tensor = torch.Tensor(frame)
+	if CUDA:
+		tensor = tensor.cuda()
 	tensor = tensor.unsqueeze(0)
 	with torch.no_grad():
-		output = model(tensor, CUDA=False).numpy()
+		output = model(tensor, CUDA=False)
 	
-	# print(output.size())
-	# input(output)
-	for i in range(output.shape[1]):
-		if output[0, i, 4] > 0.2:
-			coords = output[0, i, :4]
-			draw_square(real_frame, *[int(x) for x in coords])
+	output = write_results(output, 0.2, 80)
+	if CUDA:
+		output = output.cpu()
+	output = output.numpy()
 	
+	for out in output:
+		color = cv2.cvtColor(np.uint8([[[(out[-1] / 80) * 256, 255, 255]]]), cv2.COLOR_HSV2BGR)
+		color = tuple(map(int, color[0, 0]))
+		cv2.rectangle(real_frame, (out[1], out[2]), (out[3], out[4]), color, thickness=2)
+	
+	cv2.imwrite('../outputs/' + '.'.join(file.split('.')[:-1]) + '.png', real_frame)
 	cv2.imshow('frame', real_frame)
 	if cv2.waitKey(1) & 0xFF == ord('q'):
 		break
 
-cap.release()
 cv2.destroyAllWindows()
