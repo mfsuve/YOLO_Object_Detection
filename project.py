@@ -3,7 +3,7 @@ import cv2
 import torch
 import numpy as np
 import os
-from util import write_results
+from util import write_results, load_classes
 
 CUDA = False
 
@@ -13,6 +13,19 @@ if CUDA:
 model.load_weights('../yolov3.weights')
 
 frames_path = '../Istanbul_traffic_annotated/Istanbul_traffic_annotated/images'
+
+classes = load_classes('coco.names')
+
+
+def draw_rect(text, left, top, right, bottom):
+	color = cv2.cvtColor(np.uint8([[[(out[-1] / 80) * 256, 255, 255]]]), cv2.COLOR_HSV2BGR)
+	color = tuple(map(int, color[0, 0]))
+	cv2.rectangle(real_frame, (left, top), (right, bottom), color, thickness=2)
+	font = cv2.FONT_HERSHEY_SIMPLEX
+	textsize = cv2.getTextSize(text, font, 1, 2)[0]
+	cv2.putText(real_frame, text, ((left + right - textsize[0]) // 2, top - textsize[1] + 5), font, 1, color,
+	            thickness=2)
+
 
 for file in os.listdir(frames_path):
 	file_path = os.path.join(frames_path, file)
@@ -28,7 +41,7 @@ for file in os.listdir(frames_path):
 		tensor = tensor.cuda()
 	tensor = tensor.unsqueeze(0)
 	with torch.no_grad():
-		output = model(tensor, CUDA=False)
+		output = model(tensor, CUDA=CUDA)
 	
 	output = write_results(output, 0.2, 80)
 	if CUDA:
@@ -36,9 +49,7 @@ for file in os.listdir(frames_path):
 	output = output.numpy()
 	
 	for out in output:
-		color = cv2.cvtColor(np.uint8([[[(out[-1] / 80) * 256, 255, 255]]]), cv2.COLOR_HSV2BGR)
-		color = tuple(map(int, color[0, 0]))
-		cv2.rectangle(real_frame, (out[1], out[2]), (out[3], out[4]), color, thickness=2)
+		draw_rect(classes[int(out[-1])], *map(int, out[1:5]))
 	
 	# cv2.imwrite('../outputs/' + '.'.join(file.split('.')[:-1]) + '.png', real_frame)
 	cv2.imshow('frame', real_frame)

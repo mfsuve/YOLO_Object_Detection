@@ -212,6 +212,6 @@ def prep_image(img, inp_dim):
 
 
 def load_classes(namesfile):
-	fp = open(namesfile, "r")
-	names = fp.read().split("\n")[:-1]
+	fp = open(namesfile, 'r')
+	names = fp.read().split('\n')[:-1]
 	return names
