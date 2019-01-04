@@ -40,7 +40,7 @@ for file in os.listdir(frames_path):
 		color = tuple(map(int, color[0, 0]))
 		cv2.rectangle(real_frame, (out[1], out[2]), (out[3], out[4]), color, thickness=2)
 	
-	cv2.imwrite('../outputs/' + '.'.join(file.split('.')[:-1]) + '.png', real_frame)
+	# cv2.imwrite('../outputs/' + '.'.join(file.split('.')[:-1]) + '.png', real_frame)
 	cv2.imshow('frame', real_frame)
 	if cv2.waitKey(1) & 0xFF == ord('q'):
 		break
