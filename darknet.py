@@ -207,8 +207,8 @@ class Darknet(nn.Module):
 			elif module_type == 'yolo':
 				anchors = self.module_list[i][0].anchors
 				# Get the input dimensions
-				inp_dim = int(self.net_info["height"])
-				
+				inp_dim = int(max(self.net_info["height"], self.net_info["width"]))
+
 				# Get the number of classes
 				num_classes = int(module["classes"])
 				
