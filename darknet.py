@@ -170,7 +170,7 @@ class Darknet(nn.Module):
 		self.blocks = parse_cfg(cfgfile)
 		self.net_info, self.module_list = create_modules(self.blocks)
 	
-	def forward(self, x, CUDA):
+	def forward(self, x, CUDA, inp_dim):
 		modules = self.blocks[1:]
 		outputs = {}  # We cache the outputs for the route layer
 		
@@ -206,8 +206,6 @@ class Darknet(nn.Module):
 			
 			elif module_type == 'yolo':
 				anchors = self.module_list[i][0].anchors
-				# Get the input dimensions
-				inp_dim = int(max(self.net_info["height"], self.net_info["width"]))
 
 				# Get the number of classes
 				num_classes = int(module["classes"])
